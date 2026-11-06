@@ -1,0 +1,84 @@
+<!doctype html>
+<!-- index.html (caelestia-link): página que abre o app Caelestia Stream a partir de um link https -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>Caelestia Stream</title>
+<style>
+  :root { --fundo:#05060d; --texto:#e6e6ea; --suave:#8d93a6; --azul:#2eb3ff; --borda:#252b3d; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    background: radial-gradient(1200px 700px at 50% 30%, #14203a 0%, var(--fundo) 60%);
+    color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { width: 100%; max-width: 420px; text-align: center; }
+  h1 { margin: 0 0 6px; font-size: 26px; font-weight: 600; letter-spacing: .3px; }
+  p { margin: 0 0 22px; color: var(--suave); line-height: 1.5; }
+  a.botao {
+    display: block; padding: 15px 20px; border-radius: 14px; background: var(--azul); color: #04121f;
+    font-weight: 600; font-size: 18px; text-decoration: none;
+  }
+  a.botao:active { transform: scale(.98); }
+  .passos { margin-top: 26px; padding: 16px; border: 1px solid var(--borda); border-radius: 14px; text-align: left; color: var(--suave); font-size: 15px; line-height: 1.55; }
+  .passos b { color: var(--texto); }
+  .erro { color: #ff8a8a; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Caelestia Stream</h1>
+  <p id="sub"></p>
+  <a id="abrir" class="botao" href="#"></a>
+  <section id="ajuda" class="passos" hidden></section>
+  <p id="erro" class="erro" hidden></p>
+</main>
+<script>
+(function () {
+  "use strict";
+  var T = {
+    pt: { sub: "Abrindo o app com o seu convite…", btn: "Abrir no app", ajuda: "<b>Não abriu?</b><br>1. Instale o app Caelestia Stream neste celular.<br>2. Volte aqui e toque em “Abrir no app”.", invalido: "Este link de convite está incompleto. Peça um novo a quem enviou." },
+    en: { sub: "Opening the app with your invite…", btn: "Open in app", ajuda: "<b>Did not open?</b><br>1. Install the Caelestia Stream app on this phone.<br>2. Come back here and tap “Open in app”.", invalido: "This invite link is incomplete. Ask the sender for a new one." },
+    ja: { sub: "招待を使ってアプリを開いています…", btn: "アプリで開く", ajuda: "<b>開きませんか？</b><br>1. このスマホにCaelestia Streamアプリをインストールします。<br>2. ここに戻って「アプリで開く」をタップします。", invalido: "この招待リンクは不完全です。送信者に新しいリンクを頼んでください。" }
+  };
+  var lang = (navigator.language || "en").slice(0, 2);
+  var t = T[lang] || T.en;
+  document.documentElement.lang = T[lang] ? lang : "en";
+
+  // Os dados do convite ficam depois do # (a parte do link que o navegador não envia ao servidor)
+  var p = new URLSearchParams(location.hash.replace(/^#/, ""));
+  var ip = (p.get("ip") || "").trim(), pin = (p.get("pin") || "").trim();
+  var nome = (p.get("name") || "PC").trim(), chave = (p.get("ts") || "").trim();
+
+  var sub = document.getElementById("sub"), abrir = document.getElementById("abrir");
+  var ajuda = document.getElementById("ajuda"), erro = document.getElementById("erro");
+  abrir.textContent = t.btn;
+  ajuda.innerHTML = t.ajuda;
+
+  if (!ip || !pin) {
+    sub.hidden = true; abrir.hidden = true;
+    erro.textContent = t.invalido; erro.hidden = false;
+    return;
+  }
+
+  var q = "ip=" + encodeURIComponent(ip) + "&pin=" + encodeURIComponent(pin) + "&name=" + encodeURIComponent(nome) + (chave ? "&ts=" + encodeURIComponent(chave) : "");
+  var esquema = "caelestiastream://connect?" + q;
+  // Chrome no Android: intent:// abre o app (e leva à loja/aviso se não estiver instalado)
+  var android = /android/i.test(navigator.userAgent);
+  var destino = android ? "intent://connect?" + q + "#Intent;scheme=caelestiastream;package=com.ace.gamestream;end" : esquema;
+
+  sub.textContent = t.sub;
+  abrir.href = destino;
+  // tenta abrir sozinho; se o app não abrir, o botão e as instruções continuam na tela
+  setTimeout(function () { location.href = destino; }, 300);
+  setTimeout(function () { sub.hidden = true; ajuda.hidden = false; }, 2500);
+})();
+</script>
+</body>
+</html>
